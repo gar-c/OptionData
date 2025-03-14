@@ -1,7 +1,3 @@
-
-
-setwd("C:/Users/gacun/Documents/Project_Equity_Index/GEX_SHINY")
-
 #load libraries
 library(data.table)
 library(httr)
@@ -339,7 +335,7 @@ if (ticker %in% c("_SPX","_RUT")) {
     write_dataset(df, 
                   partitioning = c("date","part"), 
                   existing_data_behavior = "delete_matching", 
-                  path = "C:/Users/gacun/Documents/Project_Equity_Index/GEX_SHINY/GVV_Cost_Framework")
+                  path = "path")
     rm(df)
   }else{
     rm(df)
