@@ -1,3 +1,9 @@
+# ==============================
+# SPX Option Data Scraper & Processor
+# Author: Gary Cunningham
+# ==============================
+
+
 #load libraries
 library(data.table)
 library(httr)
@@ -12,6 +18,9 @@ library(dplyr)
 library(arrow)
 #require(greeks) #need greeks package for Black Scholes calculation
 
+# ==============================
+# CONFIGURATION
+# ==============================
 
 #ticker values
 tickers <- c("_SPX","_VIX","ARM","QQQ","_RUT","SMCI","BABA","GLD","TLT","BA","MSTR","CRWD","AMD","NVDA","TSLA","NFLX","META","GME")
@@ -29,7 +38,9 @@ for (ticker in tickers) {
     }
   }
 }
-
+# ==============================
+# FUNCTION: Fetch Options Data
+# ==============================
 # Loop over each ticker
 for (ticker in tickers) {
   print(paste("Processing:", ticker))
@@ -43,6 +54,10 @@ print(response$status_code)
 if (response$status_code == 200) {
   # Parse the JSON content
   data <- content(response, as = "parsed", type = "application/json")
+  
+# ==============================
+# FUNCTION: Extract Process & Clean Data
+# ==============================
   # Extract options data
   options_list <- data$data$options
   underlying <- data$data
@@ -337,7 +352,9 @@ if (ticker %in% c("_SPX","_RUT")) {
   df <- df %>% 
     mutate(option_code = as.character(option_code)) %>% 
     group_by(part)
-  
+# ==============================
+# FUNCTION: Save Data
+# ==============================
   #save the processed data as a Parquet file
   parquet_file_name <- paste0(as_date(underlying$last_trade_time), ticker, "_options.parquet")
   write_parquet(df, parquet_file_name)
