@@ -10,12 +10,25 @@ library(purrr)
 library(broom)
 library(dplyr)
 library(arrow)
-#library(greeks) #load greeks package
+#require(greeks) #need greeks package for Black Scholes calculation
 
 
 #ticker values
 tickers <- c("_SPX","_VIX","ARM","QQQ","_RUT","SMCI","BABA","GLD","TLT","BA","MSTR","CRWD","AMD","NVDA","TSLA","NFLX","META","GME")
 #
+#base directory for saving Parquet files
+base_dir <- "C:/Users/Documents/GitHub/option_parquet_files"
+
+#Check directories exist for each ticker
+for (ticker in tickers) {
+  if (ticker != "_SPX") { #leaving it in its current directory not shown
+    ticker_folder <- file.path(base_dir, ticker)
+    if (!dir.exists(ticker_folder)) {
+      dir.create(ticker_folder, recursive = TRUE)
+      print(paste("Created folder:", ticker_folder))
+    }
+  }
+}
 
 # Loop over each ticker
 for (ticker in tickers) {
@@ -48,6 +61,7 @@ if (response$status_code == 200) {
   options$highS <- underlying$high
   options$date <- as_date(underlying$last_trade_time)
   options$iv30 <- (underlying$iv30)/100
+  #fixing option code to account for the AM expirations and extra 00's and decimals in some tickers
   cboe_scraper_cleaner <- function(text, ticker) {
     if (ticker == "_SPX") {
       replacements <- list(
@@ -98,10 +112,8 @@ scrape_file <- read_file(file_label)
 
 
 cleaned_scrape <- cboe_scraper_cleaner(scrape_file,ticker)
-# Broken Code Fix
+# Saving clean files and original csv for backups
 writeLines(cleaned_scrape, paste0("clean", file_label))
-###Broken Code#
-#fwrite(cleaned_scrape, paste0("clean",file_label))
 rm(cleaned_scrape)
 #load clean data
 options <- fread(paste0("clean",file_label))
@@ -341,9 +353,10 @@ if (ticker %in% c("_SPX","_RUT")) {
     rm(df)
   }
 }else{
-  #save the processed data as a Parquet file
+  #save the other tickers processed data to target folder as a Parquet file
   parquet_file_name <- paste0(as_date(underlying$last_trade_time), ticker, "_options.parquet")
-  write_parquet(options, parquet_file_name)
+  save_path <- file.path(base_dir, ticker, parquet_file_name)
+  write_parquet(options, save_path)
 }
 
 
